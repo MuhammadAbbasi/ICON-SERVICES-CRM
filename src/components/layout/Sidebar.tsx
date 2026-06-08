@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import {
   LayoutDashboard, FolderKanban, Building2, Users, Settings,
-  ChevronRight, LogOut, Moon, Sun, Zap,
+  ChevronRight, LogOut, Moon, Sun, Zap, UserCircle,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn, getInitials, ROLE_CONFIG } from '@/lib/utils';
@@ -90,7 +90,10 @@ export function Sidebar() {
         </Button>
 
         {/* User card */}
-        <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-sidebar-accent/60 transition-colors">
+        <Link
+          href="/profile"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-sidebar-accent/60 transition-colors group"
+        >
           <Avatar className="h-8 w-8 flex-shrink-0">
             <AvatarFallback className="text-xs bg-indigo-500/20 text-indigo-400">
               {getInitials(session?.user?.name ?? 'U')}
@@ -100,14 +103,17 @@ export function Sidebar() {
             <p className="text-sm font-medium text-sidebar-foreground truncate">{session?.user?.name}</p>
             <p className="text-xs text-slate-500 truncate">{session?.user?.email}</p>
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            className="text-slate-600 hover:text-rose-400 transition-colors ml-1"
-            title="Sign out"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </button>
-        </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <UserCircle className="h-3.5 w-3.5 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <button
+              onClick={(e) => { e.preventDefault(); signOut({ callbackUrl: '/login' }); }}
+              className="text-slate-600 hover:text-rose-400 transition-colors"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </Link>
 
         {role && ROLE_CONFIG[role] && (
           <div className={cn('text-center text-xs font-medium py-1 rounded-md', ROLE_CONFIG[role].color)}>
