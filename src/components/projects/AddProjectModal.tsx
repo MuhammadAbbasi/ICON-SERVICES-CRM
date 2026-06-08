@@ -27,7 +27,7 @@ export function AddProjectModal({ open, onOpenChange, companies }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [companyId, setCompanyId] = useState('');
-  const [status, setStatus] = useState('ACTIVE');
+  const [status, setStatus] = useState('UNDER_REVIEW');
   const [priority, setPriority] = useState('MEDIUM');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -139,8 +139,14 @@ export function AddProjectModal({ open, onOpenChange, companies }: Props) {
                 <Select value={status} onValueChange={setStatus}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {['ACTIVE','ON_HOLD','COMPLETED','CANCELLED'].map((s) => (
-                      <SelectItem key={s} value={s}>{s.replace('_',' ')}</SelectItem>
+                    {[
+                      ['UNDER_REVIEW', 'Under Review'],
+                      ['CONTRACT_FILLED', 'Contract Filled'],
+                      ['ONGOING', 'Ongoing'],
+                      ['UNDER_CUSTOMER_REVIEW', 'Under Customer Review'],
+                      ['COMPLETED', 'Completed'],
+                    ].map(([val, label]) => (
+                      <SelectItem key={val} value={val}>{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -179,7 +185,7 @@ export function AddProjectModal({ open, onOpenChange, companies }: Props) {
         {step === 2 && (
           <div className="space-y-4 pt-2">
             <p className="text-sm text-muted-foreground">
-              Define work domains (categories) for this project. You can add more later.
+              Define work domains (categories) for this project. Tasks are added <span className="font-medium text-foreground">after</span> project creation from the project detail view.
             </p>
             <div className="space-y-2">
               {domains.map((domain, i) => (

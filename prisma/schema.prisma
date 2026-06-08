@@ -8,18 +8,39 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  password     String
-  role         String    @default("EMPLOYEE") // ADMIN | MANAGER | EMPLOYEE | CLIENT
-  avatar       String?
-  companyId    String?
-  company      Company?  @relation(fields: [companyId], references: [id])
-  assignedTasks Task[]   @relation("TaskAssignee")
-  createdTasks  Task[]   @relation("TaskCreator")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String       @id @default(cuid())
+  name            String
+  email           String       @unique
+  password        String
+  role            String       @default("EMPLOYEE") // ADMIN | MANAGER | EMPLOYEE | CLIENT
+  avatar          String?
+  companyId       String?
+  company         Company?     @relation(fields: [companyId], references: [id])
+  assignedTasks   Task[]       @relation("TaskAssignee")
+  createdTasks    Task[]       @relation("TaskCreator")
+  teamMemberships TeamMember[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Team {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  members     TeamMember[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
 }
 
 model Company {
@@ -36,11 +57,13 @@ model Company {
   updatedAt DateTime  @updatedAt
 }
 
+// Kanban statuses:
+// UNDER_REVIEW | CONTRACT_FILLED | ONGOING | UNDER_CUSTOMER_REVIEW | COMPLETED
 model Project {
   id          String    @id @default(cuid())
   name        String
   description String?
-  status      String    @default("ACTIVE") // ACTIVE | ON_HOLD | COMPLETED | CANCELLED
+  status      String    @default("UNDER_REVIEW")
   priority    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
   startDate   DateTime?
   endDate     DateTime?

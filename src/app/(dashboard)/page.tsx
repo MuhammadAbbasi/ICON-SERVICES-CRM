@@ -2,67 +2,44 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Header } from '@/components/layout/Header';
-import { StatsCards } from '@/components/dashboard/StatsCards';
-import { RecentProjects } from '@/components/dashboard/RecentProjects';
-import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { KanbanBoard } from '@/components/kanban/KanbanBoard';
+import { AddProjectButton } from '@/components/projects/AddProjectButton';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  const role = session?.user?.role;
+  const role = session?.user?.role ?? '';
+  const canDrag = ['ADMIN', 'MANAGER'].includes(role);
 
-  // Scope queries by role
-  const projectFilter = role === 'CLIENT'
-    ? { company: { users: { some: { id: session?.user?.id } } } }
-    : {};
+  const projectFilter =
+    role === 'CLIENT'
+      ? { company: { users: { some: { id: session?.user?.id } } } }
+      : {};
 
-  const [totalProjects, activeProjects, totalTasks, completedTasks, recentProjects] = await Promise.all([
-    prisma.project.count({ where: projectFilter }),
-    prisma.project.count({ where: { ...projectFilter, status: 'ACTIVE' } }),
-    prisma.task.count({
-      where: { domain: { project: projectFilter } },
-    }),
-    prisma.task.count({
-      where: { domain: { project: projectFilter }, status: 'DONE' },
-    }),
+  const [projects, companies] = await Promise.all([
     prisma.project.findMany({
       where: projectFilter,
-      take: 6,
       orderBy: { updatedAt: 'desc' },
       include: {
-        company: { select: { name: true } },
+        company: { select: { id: true, name: true } },
         domains: {
           include: { tasks: { select: { status: true } } },
         },
       },
     }),
+    prisma.company.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
   ]);
 
-  const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full">
       <Header
-        title={`Good morning, ${session?.user?.name?.split(' ')[0]} 👋`}
-        description="Here's what's happening across your projects today."
+        title="Project Board"
+        description={`${projects.length} projects across all phases`}
+        action={
+          canDrag ? <AddProjectButton companies={companies} /> : undefined
+        }
       />
-
-      <div className="flex-1 p-6 space-y-6 animate-fade-in">
-        <StatsCards
-          totalProjects={totalProjects}
-          activeProjects={activeProjects}
-          totalTasks={totalTasks}
-          completedTasks={completedTasks}
-          overallProgress={overallProgress}
-        />
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <RecentProjects projects={recentProjects as any} />
-          </div>
-          <div>
-            <ActivityFeed />
-          </div>
-        </div>
+      <div className="flex-1 overflow-hidden p-6">
+        <KanbanBoard initialProjects={projects as any} canDrag={canDrag} />
       </div>
     </div>
   );

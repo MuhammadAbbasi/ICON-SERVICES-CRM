@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import {
   LayoutDashboard, FolderKanban, Building2, Users, Settings,
-  ChevronRight, LogOut, Moon, Sun, Zap, UserCircle,
+  ChevronRight, LogOut, Moon, Sun, Zap, UserCircle, UsersRound,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn, getInitials, ROLE_CONFIG } from '@/lib/utils';
@@ -14,11 +14,12 @@ import { Button } from '@/components/ui/button';
 import type { Role } from '@/types';
 
 const navItems = [
-  { href: '/',          label: 'Dashboard',  icon: LayoutDashboard, roles: ['ADMIN','MANAGER','EMPLOYEE','CLIENT'] },
-  { href: '/projects',  label: 'Projects',   icon: FolderKanban,   roles: ['ADMIN','MANAGER','EMPLOYEE','CLIENT'] },
-  { href: '/companies', label: 'Companies',  icon: Building2,      roles: ['ADMIN','MANAGER'] },
-  { href: '/team',      label: 'Team',       icon: Users,          roles: ['ADMIN','MANAGER'] },
-  { href: '/settings',  label: 'Settings',   icon: Settings,       roles: ['ADMIN'] },
+  { href: '/',          label: 'Project Board', icon: LayoutDashboard, roles: ['ADMIN','MANAGER','EMPLOYEE','CLIENT'] },
+  { href: '/projects',  label: 'Projects',      icon: FolderKanban,   roles: ['ADMIN','MANAGER','EMPLOYEE','CLIENT'] },
+  { href: '/companies', label: 'Companies',     icon: Building2,      roles: ['ADMIN','MANAGER'] },
+  { href: '/teams',     label: 'Teams',         icon: UsersRound,     roles: ['ADMIN','MANAGER'] },
+  { href: '/team',      label: 'Members',       icon: Users,          roles: ['ADMIN','MANAGER'] },
+  { href: '/settings',  label: 'Settings',      icon: Settings,       roles: ['ADMIN'] },
 ];
 
 export function Sidebar() {
@@ -45,14 +46,11 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
         <div className="mb-3 px-2">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-            Navigation
-          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Navigation</span>
         </div>
         {allowed.map((item) => {
           const Icon = item.icon;
           const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-
           return (
             <Link
               key={item.href}
@@ -74,12 +72,10 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom section */}
+      {/* Bottom */}
       <div className="border-t border-sidebar-border/60 p-3 space-y-2">
-        {/* Theme toggle */}
         <Button
-          variant="ghost"
-          size="sm"
+          variant="ghost" size="sm"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="w-full justify-start gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 px-3"
         >
@@ -89,7 +85,6 @@ export function Sidebar() {
           <span className="text-sm">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
         </Button>
 
-        {/* User card */}
         <Link
           href="/profile"
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-sidebar-accent/60 transition-colors group"
