@@ -3,11 +3,14 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+async function hashPassword(plain: string) {
+  return bcrypt.hash(plain, 12);
+}
+
 async function main() {
   console.log('🌱 Seeding ICON CRM database...');
 
-  // Hash password
-  const password = await bcrypt.hash('password123', 12);
+  const password = await hashPassword('password123');
 
   // Companies
   const iconServices = await prisma.company.upsert({

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { hashPassword, verifyPassword } from '@/lib/password';
 import { z } from 'zod';
 
 const schema = z.object({
@@ -29,12 +29,12 @@ export async function PATCH(req: Request) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-  const valid = await bcrypt.compare(currentPassword, user.password);
+  const valid = await verifyPassword(currentPassword, user.password);
   if (!valid) {
     return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
   }
 
-  const hashed = await bcrypt.hash(newPassword, 12);
+  const hashed = await hashPassword(newPassword);
   await prisma.user.update({ where: { id: user.id }, data: { password: hashed } });
 
   return NextResponse.json({ message: 'Password updated successfully' });
