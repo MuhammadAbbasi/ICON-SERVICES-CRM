@@ -315,25 +315,30 @@ async function main() {
     },
   });
 
-  // Subtasks
-  await prisma.subtask.createMany({
-    skipDuplicates: true,
-    data: [
-      { id: 'sub-1', title: 'Soil testing & geo report', completed: true, taskId: task1.id },
-      { id: 'sub-2', title: 'Excavation to design depth', completed: true, taskId: task1.id },
-      { id: 'sub-3', title: 'PCC lean concrete layer', completed: true, taskId: task1.id },
-      { id: 'sub-4', title: 'Rebar placement & inspection', completed: true, taskId: task1.id },
-      { id: 'sub-5', title: 'Concrete pour & curing', completed: true, taskId: task1.id },
-      { id: 'sub-6', title: 'Shuttering & centering', completed: true, taskId: task2.id },
-      { id: 'sub-7', title: 'Rebar cage fabrication', completed: true, taskId: task2.id },
-      { id: 'sub-8', title: 'Column casting — Ground Floor', completed: false, taskId: task2.id },
-      { id: 'sub-9', title: 'Column casting — First Floor', completed: false, taskId: task2.id },
-      { id: 'sub-10', title: 'Load bank test', completed: false, taskId: task4.id },
-      { id: 'sub-11', title: 'Panel mounting & termination', completed: true, taskId: task4.id },
-      { id: 'sub-12', title: 'Pressure test (10 bar / 30 min)', completed: true, taskId: task6.id },
-      { id: 'sub-13', title: 'Flushing & disinfection', completed: false, taskId: task6.id },
-    ],
-  });
+  // Subtasks — SQLite does not support createMany with skipDuplicates; use upsert per record
+  const subtasks = [
+    { id: 'sub-1',  title: 'Soil testing & geo report',         completed: true,  taskId: task1.id },
+    { id: 'sub-2',  title: 'Excavation to design depth',        completed: true,  taskId: task1.id },
+    { id: 'sub-3',  title: 'PCC lean concrete layer',           completed: true,  taskId: task1.id },
+    { id: 'sub-4',  title: 'Rebar placement & inspection',      completed: true,  taskId: task1.id },
+    { id: 'sub-5',  title: 'Concrete pour & curing',            completed: true,  taskId: task1.id },
+    { id: 'sub-6',  title: 'Shuttering & centering',            completed: true,  taskId: task2.id },
+    { id: 'sub-7',  title: 'Rebar cage fabrication',            completed: true,  taskId: task2.id },
+    { id: 'sub-8',  title: 'Column casting — Ground Floor',     completed: false, taskId: task2.id },
+    { id: 'sub-9',  title: 'Column casting — First Floor',      completed: false, taskId: task2.id },
+    { id: 'sub-10', title: 'Load bank test',                    completed: false, taskId: task4.id },
+    { id: 'sub-11', title: 'Panel mounting & termination',      completed: true,  taskId: task4.id },
+    { id: 'sub-12', title: 'Pressure test (10 bar / 30 min)',   completed: true,  taskId: task6.id },
+    { id: 'sub-13', title: 'Flushing & disinfection',           completed: false, taskId: task6.id },
+  ];
+
+  for (const s of subtasks) {
+    await prisma.subtask.upsert({
+      where: { id: s.id },
+      update: {},
+      create: s,
+    });
+  }
 
   console.log('✅ Seed complete!');
   console.log('\n📋 Demo Credentials:');
