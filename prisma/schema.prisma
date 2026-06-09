@@ -107,11 +107,18 @@ model Task {
 }
 
 model Subtask {
-  id        String   @id @default(cuid())
-  title     String
-  completed Boolean  @default(false)
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  completed    Boolean  @default(false)
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  description  String?
+  assigneeName String?
+  labourCount  Int?
+  unit         String?
+  quantity     Float?
+  rate         Float?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

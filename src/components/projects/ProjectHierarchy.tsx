@@ -4,12 +4,13 @@ import { useState, useRef } from 'react';
 import {
   ChevronDown, ChevronRight, Plus, CheckSquare, Square, Clock,
   AlertCircle, CheckCircle2, XCircle, Layers3, ListTodo,
-  Pencil, Trash2, Loader2, CornerDownRight,
+  Pencil, Trash2, Loader2, CornerDownRight, Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TaskModal, type UserOption } from './TaskModal';
+import { SubtaskDetailModal, type SubtaskDetail } from './SubtaskDetailModal';
 import { cn, TASK_STATUS_CONFIG, PRIORITY_CONFIG, getInitials } from '@/lib/utils';
 import type { TaskStatus, Priority } from '@/types';
 
@@ -18,7 +19,7 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
 };
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
-interface Subtask  { id: string; title: string; completed: boolean; }
+interface Subtask extends SubtaskDetail {}
 interface Task {
   id: string; title: string; description?: string | null;
   status: string; priority: string; dueDate?: Date | null;
@@ -30,13 +31,21 @@ interface Domain   { id: string; name: string; description?: string | null; colo
 interface Props    { domains: Domain[]; projectId: string; canEdit: boolean; users: UserOption[]; }
 
 /* ─── Subtask row ───────────────────────────────────────────────────────────── */
-function SubtaskRow({ subtask, canEdit, onToggle, onDelete }: {
+function SubtaskRow({ subtask: initialSubtask, canEdit, onToggle, onDelete }: {
   subtask: Subtask;
   canEdit: boolean;
   onToggle: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
 }) {
-  const [pending, setPending] = useState(false);
+  const [subtask, setSubtask] = useState(initialSubtask);
+  const [pending, setPending]       = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const hasDetails = !!(
+    subtask.description || subtask.assigneeName ||
+    subtask.labourCount != null || subtask.quantity != null ||
+    subtask.rate != null || subtask.notes
+  );
 
   async function toggle() {
     setPending(true);
@@ -46,35 +55,66 @@ function SubtaskRow({ subtask, canEdit, onToggle, onDelete }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completed: !subtask.completed }),
       });
-      onToggle(subtask.id, !subtask.completed);
+      const next = !subtask.completed;
+      setSubtask((prev) => ({ ...prev, completed: next }));
+      onToggle(subtask.id, next);
     } finally { setPending(false); }
   }
 
   return (
-    <div className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 group/sub">
-      <button
-        onClick={toggle}
-        disabled={pending || !canEdit}
-        className={cn('flex-shrink-0 transition-colors', canEdit ? 'cursor-pointer' : 'cursor-default')}
-      >
-        {pending
-          ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-          : subtask.completed
-          ? <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
-          : <Square className="h-3.5 w-3.5 text-muted-foreground group-hover/sub:text-foreground/60" />}
-      </button>
-      <span className={cn('text-xs flex-1', subtask.completed ? 'line-through text-muted-foreground' : 'text-foreground/80')}>
-        {subtask.title}
-      </span>
-      {canEdit && (
+    <>
+      <div className="flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 group/sub">
         <button
-          onClick={() => onDelete(subtask.id)}
-          className="opacity-0 group-hover/sub:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+          onClick={toggle}
+          disabled={pending || !canEdit}
+          className={cn('flex-shrink-0 transition-colors', canEdit ? 'cursor-pointer' : 'cursor-default')}
         >
-          <Trash2 className="h-3 w-3" />
+          {pending
+            ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+            : subtask.completed
+            ? <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
+            : <Square className="h-3.5 w-3.5 text-muted-foreground group-hover/sub:text-foreground/60" />}
         </button>
-      )}
-    </div>
+
+        <span className={cn('text-xs flex-1', subtask.completed ? 'line-through text-muted-foreground' : 'text-foreground/80')}>
+          {subtask.title}
+        </span>
+
+        {/* Info button — always shown, dot if details filled */}
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setDetailOpen(true)}
+            title="View / edit details"
+            className={cn(
+              'transition-all text-muted-foreground hover:text-primary',
+              hasDetails ? 'opacity-100' : 'opacity-0 group-hover/sub:opacity-60'
+            )}
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
+          {hasDetails && (
+            <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
+          )}
+        </div>
+
+        {canEdit && (
+          <button
+            onClick={() => onDelete(subtask.id)}
+            className="opacity-0 group-hover/sub:opacity-100 text-muted-foreground hover:text-destructive transition-all flex-shrink-0"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      <SubtaskDetailModal
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        subtask={subtask}
+        canEdit={canEdit}
+        onSave={(updated) => setSubtask(updated)}
+      />
+    </>
   );
 }
 
