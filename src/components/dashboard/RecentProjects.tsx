@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { STATUS_CONFIG, PRIORITY_CONFIG, cn } from '@/lib/utils';

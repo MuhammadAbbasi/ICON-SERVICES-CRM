@@ -7,7 +7,7 @@ import { z } from 'zod';
 const schema = z.object({
   domainId:    z.string().min(1),
   title:       z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   status:      z.enum(['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE', 'BLOCKED']).default('TODO'),
   priority:    z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
   dueDate:     z.string().optional().nullable(),
@@ -27,6 +27,12 @@ export async function POST(req: Request) {
 
   const { domainId, title, description, status, priority, dueDate, assigneeId } = parsed.data;
 
+  // Guard against stale session IDs (e.g. after a DB reset during dev)
+  const dbUser = await prisma.user.findUnique({ where: { id: session!.user.id }, select: { id: true } });
+  if (!dbUser) {
+    return NextResponse.json({ error: 'Session expired. Please sign out and sign in again.' }, { status: 401 });
+  }
+
   const task = await prisma.task.create({
     data: {
       domainId,
@@ -36,7 +42,7 @@ export async function POST(req: Request) {
       priority,
       dueDate:     dueDate ? new Date(dueDate) : null,
       assigneeId:  assigneeId || null,
-      creatorId:   session!.user.id,
+      creatorId:   dbUser.id,
     },
     include: {
       assignee: { select: { id: true, name: true, email: true } },

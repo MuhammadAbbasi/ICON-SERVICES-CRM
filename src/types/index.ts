@@ -1,5 +1,5 @@
 export type Role = 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'CLIENT';
-export type ProjectStatus = 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+export type ProjectStatus = 'UNDER_REVIEW' | 'CONTRACT_FILLED' | 'ONGOING' | 'UNDER_CUSTOMER_REVIEW' | 'COMPLETED';
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE' | 'BLOCKED';
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
