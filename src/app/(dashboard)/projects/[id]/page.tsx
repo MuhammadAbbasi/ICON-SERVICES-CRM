@@ -42,7 +42,14 @@ export default async function ProjectDetailPage({ params }: Props) {
   if (!project) notFound();
 
   const role = session?.user?.role;
-  const canEdit = ['ADMIN', 'MANAGER'].includes(role ?? '');
+  const canEdit = ['ADMIN', 'MANAGER', 'EMPLOYEE'].includes(role ?? '');
+  const canDelete = ['ADMIN', 'MANAGER'].includes(role ?? '');
+
+  const users = await prisma.user.findMany({
+    where: { role: { in: ['ADMIN', 'MANAGER', 'EMPLOYEE'] } },
+    select: { id: true, name: true, role: true },
+    orderBy: { name: 'asc' },
+  });
 
   const allTasks = project.domains.flatMap((d) => d.tasks);
   const doneTasks = allTasks.filter((t) => t.status === 'DONE').length;
@@ -91,7 +98,12 @@ export default async function ProjectDetailPage({ params }: Props) {
         </div>
 
         {/* Hierarchy */}
-        <ProjectHierarchy domains={project.domains as any} projectId={project.id} canEdit={canEdit} />
+        <ProjectHierarchy
+          domains={project.domains as any}
+          projectId={project.id}
+          canEdit={canEdit}
+          users={users}
+        />
       </div>
     </div>
   );
